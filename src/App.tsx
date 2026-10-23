@@ -3,12 +3,12 @@ import { useForm } from '@formspree/react';
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import {
   ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, Check, ChevronLeft, ChevronRight, CircleDot, ExternalLink,
-  Github, Linkedin, Mail, Menu, MessageCircle, MoveHorizontal, Send, X
+  Github, Linkedin, Mail, Menu, MessageCircle, Send, X
 } from 'lucide-react';
 import {
   SiCss, SiFigma, SiGit, SiGithub, SiHtml5, SiJavascript,
   SiJest, SiMongodb, SiMysql, SiNextdotjs, SiPhp, SiPostgresql, SiPostman, SiPython,
-  SiReact, SiSpring, SiSwagger, SiTailwindcss, SiTypescript, SiVercel
+  SiReact, SiSpring, SiSwagger, SiTailwindcss, SiTypescript, SiVercel, SiWhatsapp
 } from 'react-icons/si';
 import { certifications, education, navigation, personal, projects, socialLinks, techStack, type Project } from './data';
 
@@ -37,6 +37,7 @@ function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: 
 function SocialIcon({ name, size = 17 }: { name: string; size?: number }) {
   if (name === 'linkedin') return <Linkedin size={size} />;
   if (name === 'github') return <Github size={size} />;
+  if (name === 'whatsapp') return <SiWhatsapp size={size} />;
   return <MessageCircle size={size} />;
 }
 
@@ -57,8 +58,11 @@ function HangingCard() {
   const frameRef = useRef<number | null>(null);
   const [angle, setAngle] = useState(reduce ? 0 : -20);
   const [dragging, setDragging] = useState(false);
+  const [mobile, setMobile] = useState(false);
   const tapeBend = angle * 0.9;
-  const tapePath = `M 20 4 C ${20 + tapeBend} 78, ${20 + tapeBend} 170, 20 246`;
+  const tapePath = `M 20 4 C ${20 + tapeBend} 88, ${20 + tapeBend} 188, 20 276`;
+  const tapeLeftPath = `M 10 4 C ${10 + tapeBend * 0.82} 88, ${10 + tapeBend * 0.82} 188, 10 276`;
+  const tapeRightPath = `M 30 4 C ${30 + tapeBend * 0.82} 88, ${30 + tapeBend * 0.82} 188, 30 276`;
 
   useEffect(() => {
     if (reduce) return;
@@ -75,6 +79,14 @@ function HangingCard() {
     frameRef.current = requestAnimationFrame(tick);
     return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); };
   }, [reduce]);
+
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 760px)');
+    const update = () => setMobile(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
 
   const settle = () => {
     if (reduce) { setAngle(0); return; }
@@ -93,13 +105,14 @@ function HangingCard() {
   };
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (mobile) return;
     if (event.target instanceof Element && event.target.closest('a')) return;
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     event.currentTarget.setPointerCapture(event.pointerId);
     setDragging(true);
   };
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!dragging || !anchorRef.current) return;
+    if (mobile || !dragging || !anchorRef.current) return;
     const anchor = anchorRef.current.getBoundingClientRect();
     const dx = event.clientX - (anchor.left + anchor.width / 2);
     const dy = Math.max(26, event.clientY - anchor.top);
@@ -107,7 +120,7 @@ function HangingCard() {
     setAngle(Math.max(-42, Math.min(42, -next)));
   };
   const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (!dragging) return;
+    if (mobile || !dragging) return;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     setDragging(false);
     settle();
@@ -116,25 +129,46 @@ function HangingCard() {
   return <div className="hanging-stage">
     <div ref={anchorRef} className="pivot-point" aria-hidden="true" />
     <motion.div className={`badge-rig ${dragging ? 'is-dragging' : ''}`} style={{ rotate: angle }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} initial={{ y: 0 }} animate={{ y: 0 }}>
-      <svg className="hanging-tape" viewBox="0 0 40 250" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="25" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="19" strokeLinecap="round" /><path d={tapePath} fill="none" stroke="#777a86" strokeWidth="1" strokeDasharray="2 7" opacity=".35" /></svg>
+      <svg className="hanging-tape" viewBox="0 0 40 280" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="29" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="22" strokeLinecap="round" /><path d={tapeLeftPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /><path d={tapeRightPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /></svg>
       <span className="tape-ring" aria-hidden="true" />
       <div className="badge-card">
-        <div className="badge-topline"><span>DD / 2026</span><span>ITM</span></div>
-        <img src="/images/profile-placeholder.svg" alt="Profile placeholder for Dineth Dovindu" />
+        <img src="/images/Professional_Portrait.png" alt="Profile placeholder for Dineth Dovindu" />
         <div className="badge-info"><span className="badge-name">Dineth Dovindu</span><span className="badge-role">FULL-STACK DEVELOPER</span></div>
-        <div className="badge-socials">{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={`${link.label} profile`} onPointerDown={(event) => event.stopPropagation()}><SocialIcon name={link.icon} /></a>)}</div>
+        <div className="badge-socials">{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={`${link.label} profile`} onPointerDown={(event) => event.stopPropagation()}><SocialIcon name={link.icon} /></a>)}<a href={`mailto:${personal.email}`} aria-label="Email Dineth" onPointerDown={(event) => event.stopPropagation()}><Mail size={17} /></a></div>
       </div>
     </motion.div>
-    <div className="drag-hint"><MoveHorizontal size={14} /> Drag around the anchor</div>
+    <div className="hero-scroll-indicator" aria-hidden="true"><span>Scroll to explore</span><div className="scroll-pill"><i /></div></div>
   </div>;
+}
+
+function TypewriterName() {
+  const fullName = 'Dineth Dovindu';
+  const reduce = useReducedMotion();
+  const deleting = useRef(false);
+  const [value, setValue] = useState(reduce ? fullName : '');
+
+  useEffect(() => {
+    if (reduce) { setValue(fullName); return; }
+    const delay = value === fullName ? 2200 : value.length === 0 ? 700 : deleting.current ? 72 : 125;
+    const timer = window.setTimeout(() => {
+      if (value === fullName) deleting.current = true;
+      if (value.length === 0) deleting.current = false;
+      setValue((current) => deleting.current ? current.slice(0, -1) : fullName.slice(0, current.length + 1));
+    }, delay);
+    return () => window.clearTimeout(timer);
+  }, [reduce, value]);
+
+  const firstName = value.slice(0, 6);
+  const lastName = value.length > 6 ? value.slice(7) : '';
+  return <h1 aria-label={fullName}>{firstName}{!lastName && <i className="typing-caret" aria-hidden="true" />}<br /><span>{lastName}{lastName && <i className="typing-caret" aria-hidden="true" />}</span></h1>;
 }
 
 function Hero() {
   return <section id="home" className="hero section-shell"><div className="hero-glow" aria-hidden="true" /><div className="hero-grid">
-    <Reveal className="hero-intro"><span className="eyebrow">HELLO, I'M</span><h1>Dineth<br /><span>Dovindu</span></h1><p className="hero-role">Full-Stack Developer</p><p className="hero-copy">Building modern, secure, and scalable web applications using React, Spring Boot, and modern development technologies.</p><div className="hero-actions">{personal.cvAvailable ? <a className="primary-button" href={personal.cvPath} download="Dineth_Dovindu_CV.pdf">Download CV <ArrowDown size={16} /></a> : <span className="primary-button disabled-button" aria-disabled="true">CV coming soon <ArrowDown size={16} /></span>}<a className="talk-button" href="#contact">Let's Talk <ArrowUpRight size={16} /></a></div></Reveal>
+    <Reveal className="hero-intro"><span className="eyebrow">HELLO, I'M</span><TypewriterName /><p className="hero-role">Full-Stack Developer</p><p className="hero-copy">Building modern, secure, and scalable web applications using React, Spring Boot, and modern development technologies.</p><div className="hero-actions">{personal.cvAvailable ? <a className="primary-button" href={personal.cvPath} download="Dineth_Dovindu_CV.pdf">Download CV <ArrowDown size={16} /></a> : <span className="primary-button disabled-button" aria-disabled="true">CV coming soon <ArrowDown size={16} /></span>}<a className="talk-button" href="#contact">Let's Talk <ArrowUpRight size={16} /></a></div></Reveal>
     <HangingCard />
-    <Reveal className="hero-about" delay={.1}><span className="eyebrow">A LITTLE ABOUT ME</span><h2>Curious by nature.<br /><em>Focused on impact.</em></h2><p>I'm an Information Technology & Management undergraduate at the University of Moratuwa, Sri Lanka, passionate about full-stack web development and problem solving. I enjoy building practical applications with React, Java, Spring Boot, and modern web technologies.</p><p>I'm preparing for opportunities in professional software engineering where thoughtful products and reliable systems meet.</p><a className="outline-button" href="#contact">Contact Me <ArrowUpRight size={16} /></a></Reveal>
-  </div><div className="scroll-cue"><span>SCROLL TO EXPLORE</span><div /></div></section>;
+    <Reveal className="hero-about" delay={.1}><span className="eyebrow">A LITTLE ABOUT ME</span><h2>Curious by nature.<br /><em>Focused on impact.</em></h2><p>I'm an Information Technology & Management undergraduate at the University of Moratuwa, Sri Lanka, passionate about full-stack web development and problem solving. I enjoy building practical applications with React, Java, Spring Boot, and modern web technologies.</p><p>I'm preparing for opportunities in professional software engineering where thoughtful products and reliable systems meet.</p></Reveal>
+  </div></section>;
 }
 
 function TechStack() {
