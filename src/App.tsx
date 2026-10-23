@@ -94,9 +94,9 @@ function HangingCard() {
     const startedAt = performance.now();
     const tick = (now: number) => {
       const elapsed = (now - startedAt) / 1000;
-      const progress = Math.min(elapsed / 1.15, 1);
+      const progress = Math.min(elapsed / 2.2, 1);
       const envelope = Math.pow(1 - progress, 1.6);
-      const next = start * envelope * Math.cos(10.2 * elapsed);
+      const next = start * envelope * Math.cos(7.2 * elapsed);
       setAngle(next);
       if (progress < 1) frameRef.current = requestAnimationFrame(tick);
       else { frameRef.current = null; setAngle(0); }
@@ -132,7 +132,7 @@ function HangingCard() {
       <svg className="hanging-tape" viewBox="0 0 40 280" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="29" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="22" strokeLinecap="round" /><path d={tapeLeftPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /><path d={tapeRightPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /></svg>
       <span className="tape-ring" aria-hidden="true" />
       <div className="badge-card">
-        <img src="/images/Professional_Portrait.png" alt="Profile placeholder for Dineth Dovindu" />
+        <img src="/images/Professional_Portrait.png" alt="Profile placeholder for Dineth Dovindu" draggable={false} onDragStart={(event) => event.preventDefault()} />
         <div className="badge-info"><span className="badge-name">Dineth Dovindu</span><span className="badge-role">FULL-STACK DEVELOPER</span></div>
         <div className="badge-socials">{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={`${link.label} profile`} onPointerDown={(event) => event.stopPropagation()}><SocialIcon name={link.icon} /></a>)}<a href={`mailto:${personal.email}`} aria-label="Email Dineth" onPointerDown={(event) => event.stopPropagation()}><Mail size={17} /></a></div>
       </div>
