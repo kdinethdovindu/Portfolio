@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useForm } from '@formspree/react';
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react';
 import {
@@ -47,16 +47,77 @@ function Header({ active }: { active: string }) {
     <nav id="primary-navigation" className={`desktop-nav ${open ? 'mobile-open' : ''}`} aria-label="Primary navigation">
       {navigation.map((item) => <a key={item.href} className={active === item.href.slice(1) ? 'active' : ''} href={item.href} onClick={() => setOpen(false)}>{item.label}</a>)}
     </nav>
-    <a className="talk-button desktop-talk" href="#contact">Let's Talk <ArrowUpRight size={16} /></a>
     <button className="menu-button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="primary-navigation" aria-label={open ? 'Close menu' : 'Open menu'}>{open ? <X /> : <Menu />}</button>
   </div></header>;
 }
 
 function HangingCard() {
   const reduce = useReducedMotion();
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<number | null>(null);
+  const [angle, setAngle] = useState(reduce ? 0 : -20);
+  const [dragging, setDragging] = useState(false);
+  const tapeBend = angle * 0.9;
+  const tapePath = `M 20 4 C ${20 + tapeBend} 78, ${20 + tapeBend} 170, 20 246`;
+
+  useEffect(() => {
+    if (reduce) return;
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const elapsed = (now - startedAt) / 1000;
+      const progress = Math.min(elapsed / 5, 1);
+      const envelope = Math.pow(1 - progress, 1.6);
+      const next = -20 * envelope * Math.cos(4.2 * elapsed);
+      setAngle(next);
+      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
+      else { frameRef.current = null; setAngle(0); }
+    };
+    frameRef.current = requestAnimationFrame(tick);
+    return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); };
+  }, [reduce]);
+
+  const settle = () => {
+    if (reduce) { setAngle(0); return; }
+    const start = angle;
+    const startedAt = performance.now();
+    const tick = (now: number) => {
+      const elapsed = (now - startedAt) / 1000;
+      const progress = Math.min(elapsed / 1.15, 1);
+      const envelope = Math.pow(1 - progress, 1.6);
+      const next = start * envelope * Math.cos(10.2 * elapsed);
+      setAngle(next);
+      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
+      else { frameRef.current = null; setAngle(0); }
+    };
+    frameRef.current = requestAnimationFrame(tick);
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest('a')) return;
+    if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(true);
+  };
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragging || !anchorRef.current) return;
+    const anchor = anchorRef.current.getBoundingClientRect();
+    const dx = event.clientX - (anchor.left + anchor.width / 2);
+    const dy = Math.max(26, event.clientY - anchor.top);
+    const next = Math.atan2(dx, dy) * (180 / Math.PI);
+    setAngle(Math.max(-42, Math.min(42, -next)));
+  };
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!dragging) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    setDragging(false);
+    settle();
+  };
+
   return <div className="hanging-stage">
-    <div className="lanyard-anchor" aria-hidden="true"><span className="cord cord-left" /><span className="cord cord-right" /><span className="ring" /></div>
-    <motion.div className="badge-wrap" drag={reduce ? false : 'x'} dragConstraints={{ left: -90, right: 90 }} dragElastic={0.18} dragMomentum dragTransition={{ bounceStiffness: 150, bounceDamping: 18 }} initial={reduce ? { y: 0, rotate: 0 } : { y: -500, rotate: -12 }} animate={reduce ? { y: 0, rotate: 0 } : { y: [-500, 12, -4, 3, -1, 0], rotate: [-12, 8, -5, 3, -1.5, 0] }} transition={reduce ? { duration: .1 } : { duration: 5, times: [0, .25, .5, .68, .84, 1], ease: 'easeOut' }}>
+    <div ref={anchorRef} className="pivot-point" aria-hidden="true" />
+    <motion.div className={`badge-rig ${dragging ? 'is-dragging' : ''}`} style={{ rotate: angle }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} initial={{ y: 0 }} animate={{ y: 0 }}>
+      <svg className="hanging-tape" viewBox="0 0 40 250" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="25" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="19" strokeLinecap="round" /><path d={tapePath} fill="none" stroke="#777a86" strokeWidth="1" strokeDasharray="2 7" opacity=".35" /></svg>
+      <span className="tape-ring" aria-hidden="true" />
       <div className="badge-card">
         <div className="badge-topline"><span>DD / 2026</span><span>ITM</span></div>
         <img src="/images/profile-placeholder.svg" alt="Profile placeholder for Dineth Dovindu" />
@@ -64,13 +125,13 @@ function HangingCard() {
         <div className="badge-socials">{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={`${link.label} profile`} onPointerDown={(event) => event.stopPropagation()}><SocialIcon name={link.icon} /></a>)}</div>
       </div>
     </motion.div>
-    <div className="drag-hint"><MoveHorizontal size={14} /> Drag to swing</div>
+    <div className="drag-hint"><MoveHorizontal size={14} /> Drag around the anchor</div>
   </div>;
 }
 
 function Hero() {
   return <section id="home" className="hero section-shell"><div className="hero-glow" aria-hidden="true" /><div className="hero-grid">
-    <Reveal className="hero-intro"><span className="eyebrow">HELLO, I'M</span><h1>Dineth<br /><span>Dovindu</span></h1><p className="hero-role">Full-Stack Developer</p><p className="hero-copy">Building modern, secure, and scalable web applications using React, Spring Boot, and modern development technologies.</p><div className="hero-actions">{personal.cvAvailable ? <a className="primary-button" href={personal.cvPath} download="Dineth_Dovindu_CV.pdf">Download CV <ArrowDown size={16} /></a> : <span className="primary-button disabled-button" aria-disabled="true">CV coming soon <ArrowDown size={16} /></span>}<a className="text-link" href="#projects">Explore work <ArrowUpRight size={16} /></a></div></Reveal>
+    <Reveal className="hero-intro"><span className="eyebrow">HELLO, I'M</span><h1>Dineth<br /><span>Dovindu</span></h1><p className="hero-role">Full-Stack Developer</p><p className="hero-copy">Building modern, secure, and scalable web applications using React, Spring Boot, and modern development technologies.</p><div className="hero-actions">{personal.cvAvailable ? <a className="primary-button" href={personal.cvPath} download="Dineth_Dovindu_CV.pdf">Download CV <ArrowDown size={16} /></a> : <span className="primary-button disabled-button" aria-disabled="true">CV coming soon <ArrowDown size={16} /></span>}<a className="talk-button" href="#contact">Let's Talk <ArrowUpRight size={16} /></a></div></Reveal>
     <HangingCard />
     <Reveal className="hero-about" delay={.1}><span className="eyebrow">A LITTLE ABOUT ME</span><h2>Curious by nature.<br /><em>Focused on impact.</em></h2><p>I'm an Information Technology & Management undergraduate at the University of Moratuwa, Sri Lanka, passionate about full-stack web development and problem solving. I enjoy building practical applications with React, Java, Spring Boot, and modern web technologies.</p><p>I'm preparing for opportunities in professional software engineering where thoughtful products and reliable systems meet.</p><a className="outline-button" href="#contact">Contact Me <ArrowUpRight size={16} /></a></Reveal>
   </div><div className="scroll-cue"><span>SCROLL TO EXPLORE</span><div /></div></section>;
