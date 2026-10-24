@@ -11,7 +11,7 @@ export type Project = {
   github: string | null;
   demo: string | null;
 };
-export type TechItem = { name: string; group: string; icon: string; color: string };
+export type TechItem = { name: string; group: string; icon: string; color: string; image?: string };
 export type Certificate = { title: string; issuer: string; issued?: string; icon: string; credentialUrl: string | null };
 
 export const personal = {

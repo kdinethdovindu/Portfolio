@@ -1,0 +1,164 @@
+[
+  {
+    "file": "react.png",
+    "label": "React",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "typescript.png",
+    "label": "TypeScript",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "javascript.png",
+    "label": "JavaScript",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "html5.png",
+    "label": "HTML5",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "css3.png",
+    "label": "CSS3",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "tailwind-css.png",
+    "label": "Tailwind CSS",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "nextjs.png",
+    "label": "Next.js",
+    "category": "Frontend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "java.png",
+    "label": "Java",
+    "category": "Backend",
+    "source": "Font Awesome Brands (Java brand mark)"
+  },
+  {
+    "file": "spring-boot.png",
+    "label": "Spring Boot",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "spring-security.png",
+    "label": "Spring Security",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "spring-data-jpa.png",
+    "label": "Spring Data JPA",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "rest-apis.png",
+    "label": "REST APIs",
+    "category": "Backend",
+    "source": "Generic REST APIs icon; no single official logo"
+  },
+  {
+    "file": "jwt.png",
+    "label": "JWT",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "php.png",
+    "label": "PHP",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "python.png",
+    "label": "Python",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "flask.png",
+    "label": "Flask",
+    "category": "Backend",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "postgresql.png",
+    "label": "PostgreSQL",
+    "category": "Databases",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "mysql.png",
+    "label": "MySQL",
+    "category": "Databases",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "mongodb.png",
+    "label": "MongoDB",
+    "category": "Databases",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "git.png",
+    "label": "Git",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "github.png",
+    "label": "GitHub",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "postman.png",
+    "label": "Postman",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "junit.png",
+    "label": "JUnit",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "mockito.png",
+    "label": "Mockito",
+    "category": "Tools & Testing",
+    "source": "Generic testing icon; not an official Mockito logo"
+  },
+  {
+    "file": "swagger.png",
+    "label": "Swagger / OpenAPI",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "vercel.png",
+    "label": "Vercel",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  },
+  {
+    "file": "figma.png",
+    "label": "Figma",
+    "category": "Tools & Testing",
+    "source": "Simple Icons brand mark"
+  }
+]

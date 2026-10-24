@@ -1,37 +1,27 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useForm } from '@formspree/react';
-import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'motion/react';
+import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import {
-  ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, Check, ChevronLeft, ChevronRight, CircleDot, ExternalLink,
+  ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, ChevronLeft, ChevronRight, ExternalLink,
   Github, Linkedin, Mail, Menu, MessageCircle, Send, X
 } from 'lucide-react';
-import {
-  SiCss, SiFigma, SiGit, SiGithub, SiHtml5, SiJavascript,
-  SiJest, SiMongodb, SiMysql, SiNextdotjs, SiPhp, SiPostgresql, SiPostman, SiPython,
-  SiReact, SiSpring, SiSwagger, SiTailwindcss, SiTypescript, SiVercel, SiWhatsapp
-} from 'react-icons/si';
+import { SiWhatsapp } from 'react-icons/si';
 import { certifications, education, navigation, personal, projects, socialLinks, techStack, type Project } from './data';
-
-const iconMap: Record<string, ReactNode> = {
-  react: <SiReact />, typescript: <SiTypescript />, javascript: <SiJavascript />, html5: <SiHtml5 />, css3: <SiCss />,
-  tailwind: <SiTailwindcss />, nextjs: <SiNextdotjs />, java: <span className="text-icon">☕</span>, spring: <SiSpring />,
-  security: <BadgeCheck />, database: <CircleDot />, api: <span className="text-icon">↗</span>, jwt: <span className="text-icon">JWT</span>,
-  php: <SiPhp />, python: <SiPython />, postgres: <SiPostgresql />, mysql: <SiMysql />, mongodb: <SiMongodb />,
-  git: <SiGit />, github: <SiGithub />, postman: <SiPostman />, junit: <SiJest />, mockito: <Check />,
-  swagger: <SiSwagger />, vercel: <SiVercel />, figma: <SiFigma />
-};
 
 const issuerMarks: Record<string, string> = { meta: 'M', packt: 'P', datacamp: 'DC', umich: 'M', ibm: 'IBM', uom: 'UoM' };
 
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const visible = useInView(ref, { once: true, margin: '-60px' });
+  const visible = useInView(ref, { once: false, margin: '-15% 0px -15% 0px' });
   const reduce = useReducedMotion();
-  return <motion.div ref={ref} className={className} initial={{ opacity: 0, y: reduce ? 0 : 22 }} animate={visible ? { opacity: 1, y: 0 } : undefined} transition={{ duration: .55, delay, ease: 'easeOut' }}>{children}</motion.div>;
+  return <motion.div ref={ref} className={className} initial={{ opacity: 0, y: reduce ? 0 : 22 }} animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: reduce ? 0 : 22 }} transition={{ duration: .6, delay, ease: 'easeOut' }}>{children}</motion.div>;
 }
 
 function SectionHeading({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
-  return <div className="section-heading"><span className="eyebrow">{eyebrow}</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div>;
+  const ref = useRef<HTMLDivElement>(null);
+  const visible = useInView(ref, { once: false, margin: '-15% 0px -15% 0px' });
+  const reduce = useReducedMotion();
+  return <motion.div ref={ref} className="section-heading" initial={{ opacity: 0, y: reduce ? 0 : 24 }} animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: reduce ? 0 : 24 }} transition={{ duration: .65, ease: 'easeOut' }}><span className="eyebrow">{eyebrow}</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</motion.div>;
 }
 
 function SocialIcon({ name, size = 17 }: { name: string; size?: number }) {
@@ -50,6 +40,12 @@ function Header({ active }: { active: string }) {
     </nav>
     <button className="menu-button" onClick={() => setOpen((value) => !value)} aria-expanded={open} aria-controls="primary-navigation" aria-label={open ? 'Close menu' : 'Open menu'}>{open ? <X /> : <Menu />}</button>
   </div></header>;
+}
+
+function ScrollProgress() {
+  const { scrollYProgress } = useScroll();
+  const dotPosition = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+  return <div className="site-progress" aria-hidden="true"><div className="site-progress-track"><motion.i className="site-progress-fill" style={{ scaleY: scrollYProgress }} /><motion.b className="site-progress-dot" style={{ top: dotPosition }} /></div></div>;
 }
 
 function HangingCard() {
@@ -129,8 +125,8 @@ function HangingCard() {
   return <div className="hanging-stage">
     <div ref={anchorRef} className="pivot-point" aria-hidden="true" />
     <motion.div className={`badge-rig ${dragging ? 'is-dragging' : ''}`} style={{ rotate: angle }} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp} initial={{ y: 0 }} animate={{ y: 0 }}>
-      <svg className="hanging-tape" viewBox="0 0 40 280" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="29" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="22" strokeLinecap="round" /><path d={tapeLeftPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /><path d={tapeRightPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /></svg>
-      <span className="tape-ring" aria-hidden="true" />
+      <svg className="hanging-tape" viewBox="0 0 40 280" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="tape-shade" x1="0" x2="1"><stop offset="0" stopColor="#0c0d12" /><stop offset=".38" stopColor="#292b33" /><stop offset=".7" stopColor="#17181d" /><stop offset="1" stopColor="#08090c" /></linearGradient></defs><path d={tapePath} fill="none" stroke="#08090c" strokeWidth="29" strokeLinecap="round" opacity=".8" /><path d={tapePath} fill="none" stroke="url(#tape-shade)" strokeWidth="22" strokeLinecap="round" /><path d={tapeLeftPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /><path d={tapeRightPath} fill="none" stroke="#717581" strokeWidth="1.2" opacity=".8" /><path id="tape-text-path" d={tapePath} fill="none" stroke="none" /><text className="tape-label"><textPath href="#tape-text-path" startOffset="50%" textAnchor="middle">KATANGODAGE DINETH DOVINDU</textPath></text></svg>
+      <span className="tape-clip" aria-hidden="true" /><span className="tape-ring" aria-hidden="true" />
       <div className="badge-card">
         <img src="/images/Professional_Portrait.png" alt="Profile placeholder for Dineth Dovindu" draggable={false} onDragStart={(event) => event.preventDefault()} />
         <div className="badge-info"><span className="badge-name">Dineth Dovindu</span><span className="badge-role">FULL-STACK DEVELOPER</span></div>
@@ -173,11 +169,17 @@ function Hero() {
 
 function TechStack() {
   const groups = useMemo(() => ['Frontend', 'Backend', 'Databases', 'Tools'].map((group) => ({ group, items: techStack.filter((item) => item.group === group) })), []);
-  return <section id="tech-stack" className="section-shell section-space"><SectionHeading eyebrow="02 / TOOLKIT" title="Tech Stack" subtitle="Technologies and tools I use to build full-stack applications." /><div className="tech-groups">{groups.map((section) => <div key={section.group} className="tech-group"><h3>{section.group}<span>{String(section.items.length).padStart(2, '0')}</span></h3><div className="tech-grid">{section.items.map((item, index) => <Reveal key={item.name} delay={index * .035}><div className="tech-card" style={{ '--tech-color': item.color } as CSSProperties}><span className="tech-icon">{iconMap[item.icon]}</span><span>{item.name}</span></div></Reveal>)}</div></div>)}</div></section>;
+  const [activeGroup, setActiveGroup] = useState('All');
+  const visibleGroups = activeGroup === 'All' ? groups : groups.filter((section) => section.group === activeGroup);
+  const loopItems = (items: typeof techStack) => items.length >= 6 ? items : Array.from({ length: 6 }, (_, index) => items[index % items.length]);
+  return <section id="tech-stack" className="section-shell section-space"><SectionHeading eyebrow="02 / TOOLKIT" title="Tech Stack" subtitle="Technologies and tools I use to build full-stack applications." /><Reveal className="stack-showcase">
+    <div className="stack-filters" role="tablist" aria-label="Filter technology groups">{['All', ...groups.map((section) => section.group)].map((group) => <button key={group} type="button" role="tab" aria-selected={activeGroup === group} className={activeGroup === group ? 'active' : ''} onClick={() => setActiveGroup(group)}><span aria-hidden="true">{activeGroup === group ? '■' : '□'}</span>{group}</button>)}</div>
+    <div className={`stack-marquees ${activeGroup === 'All' ? 'is-looping no-hover' : 'is-filtered'}`}>{visibleGroups.map((section, rowIndex) => { const laneItems = activeGroup === 'All' ? loopItems(section.items) : section.items; return <div className={`stack-marquee ${activeGroup === 'All' ? '' : 'static'} ${rowIndex % 2 ? 'reverse' : ''}`} key={section.group} aria-label={`${section.group} technologies`}><div className="stack-marquee-track">{activeGroup === 'All' ? [...laneItems, ...laneItems].map((item, index) => <div className="stack-chip" key={`${section.group}-${item.name}-${index}`} style={{ '--tech-color': item.color } as CSSProperties}><img src={item.image ?? '/images/tech-demo.png'} alt="" aria-hidden="true" /><span>{item.name}</span></div>) : laneItems.map((item) => <div className="stack-chip" key={`${section.group}-${item.name}`} style={{ '--tech-color': item.color } as CSSProperties}><img src={item.image ?? '/images/tech-demo.png'} alt="" aria-hidden="true" /><span>{item.name}</span></div>)}</div></div>; })}</div>
+  </Reveal></section>;
 }
 
 function ProjectCard({ project }: { project: Project }) {
-  const LinkButton = ({ href, label, icon }: { href: string | null; label: string; icon: ReactNode }) => href ? <a className="card-action" href={href} target="_blank" rel="noreferrer">{icon}{label}</a> : <span className="card-action disabled" aria-disabled="true">{icon}{label}<small>Coming soon</small></span>;
+  const LinkButton = ({ href, label, icon }: { href: string | null; label: string; icon: ReactNode }) => href ? <a className="card-action" href={href} target="_blank" rel="noreferrer">{icon}{label}</a> : <span className="card-action disabled" aria-disabled="true">{icon}{label}</span>;
   return <article className="project-card"><div className="project-image"><img src={project.image} alt={`${project.shortTitle} project placeholder`} /><span className="project-index">PROJECT / {String(projects.indexOf(project) + 1).padStart(2, '0')}</span></div><div className="project-body"><div><span className="project-kicker">{project.role ?? project.tech.slice(0, 3).join(' · ')}</span><h3>{project.title}</h3><p>{project.description}</p></div><div className="project-actions"><LinkButton href={project.github} label="GitHub" icon={<Github size={15} />} /><LinkButton href={project.demo} label="Live Demo" icon={<ExternalLink size={15} />} /></div></div></article>;
 }
 
@@ -186,11 +188,21 @@ function Projects() {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const [travel, setTravel] = useState(0);
+  const [scrollDistance, setScrollDistance] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const manualOffset = useMotionValue(0);
+  const dragStartRef = useRef<{ pointerX: number; position: number } | null>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
-  const x = useTransform(scrollYProgress, [0, 1], [0, -travel]);
-  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) setTravel(Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24)); }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, []);
-  return <section id="projects" ref={sectionRef} className="projects-section section-shell"><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /><div className="gallery-controls"><button onClick={() => setMobileIndex((i) => Math.max(0, i - 1))} aria-label="Previous project"><ChevronLeft /></button><button onClick={() => setMobileIndex((i) => Math.min(projects.length - 1, i + 1))} aria-label="Next project"><ChevronRight /></button></div></div><div className="gallery-viewport" ref={viewportRef}><motion.div className="project-track" ref={trackRef} style={{ x, ['--mobile-index' as string]: mobileIndex } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: scrollYProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
+  const scrollX = useTransform(scrollYProgress, [0, 1], [0, -travel]);
+  const smoothScrollX = useSpring(scrollX, { stiffness: 78, damping: 28, mass: .55 });
+  const trackX = useTransform([smoothScrollX, manualOffset], ([scrollPosition, manualPosition]) => Number(scrollPosition) + Number(manualPosition));
+  const clampPosition = (position: number) => Math.max(-travel, Math.min(0, position));
+  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); const isMobile = window.matchMedia('(max-width: 760px)').matches; setTravel(nextTravel); setScrollDistance(isMobile ? 0 : nextTravel * 1.55); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
+  const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse' && event.button !== 0) return; if (event.target instanceof Element && event.target.closest('a,button')) return; const position = clampPosition(smoothScrollX.get() + manualOffset.get()); dragStartRef.current = { pointerX: event.clientX, position }; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
+  const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => { const start = dragStartRef.current; if (!start) return; const position = clampPosition(start.position + event.clientX - start.pointerX); manualOffset.set(position - smoothScrollX.get()); };
+  const handleGalleryPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); dragStartRef.current = null; setDragging(false); };
+  return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /><div className="gallery-controls"><button onClick={() => setMobileIndex((i) => Math.max(0, i - 1))} aria-label="Previous project"><ChevronLeft /></button><button onClick={() => setMobileIndex((i) => Math.min(projects.length - 1, i + 1))} aria-label="Next project"><ChevronRight /></button></div></div><div className={`gallery-viewport ${dragging ? 'is-dragging' : ''}`} ref={viewportRef} onPointerDown={handleGalleryPointerDown} onPointerMove={handleGalleryPointerMove} onPointerUp={handleGalleryPointerUp} onPointerCancel={handleGalleryPointerUp}><motion.div className="project-track" ref={trackRef} style={{ x: trackX, ['--mobile-index' as string]: mobileIndex } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: scrollYProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
 }
 
 function Timeline({ items, kind }: { items: typeof education | typeof certifications; kind: 'education' | 'certifications' }) {
@@ -218,5 +230,5 @@ function Footer() {
 export default function App() {
   const [active, setActive] = useState('home');
   useEffect(() => { const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(entry.target.id); }), { rootMargin: '-35% 0px -55% 0px' }); navigation.forEach((item) => { const section = document.querySelector(item.href); if (section) observer.observe(section); }); return () => observer.disconnect(); }, []);
-  return <><Header active={active} /><main><Hero /><TechStack /><Projects /><Education /><Certifications /><Contact /></main><Footer /></>;
+  return <><Header active={active} /><ScrollProgress /><main><Hero /><TechStack /><Projects /><Education /><Certifications /><Contact /></main><Footer /></>;
 }
