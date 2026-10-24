@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { useForm } from '@formspree/react';
-import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
+import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import {
-  ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, ExternalLink,
+  ArrowDown, ArrowUp, ArrowUpRight, ExternalLink,
   Github, Linkedin, Mail, Menu, MessageCircle, Send, X
 } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
@@ -42,13 +42,16 @@ function Header({ active }: { active: string }) {
   </div></header>;
 }
 
-function ScrollProgress({ active }: { active: string }) {
+function ScrollProgress({ active, projectProgress }: { active: string; projectProgress: MotionValue<number> }) {
   const { scrollYProgress } = useScroll();
-  const frozenProgress = useMotionValue(0);
+  const projectStart = useRef(0);
   useEffect(() => {
-    if (active === 'projects') frozenProgress.set(scrollYProgress.get());
-  }, [active, frozenProgress, scrollYProgress]);
-  const displayProgress = active === 'projects' ? frozenProgress : scrollYProgress;
+    if (active === 'projects') projectStart.current = projectProgress.get();
+  }, [active, projectProgress]);
+  const displayProgress = useTransform([scrollYProgress, projectProgress], ([pageProgress, localProgress]) => {
+    const dragContribution = active === 'projects' ? (Number(localProgress) - projectStart.current) * .08 : 0;
+    return Math.max(0, Math.min(1, Number(pageProgress) + dragContribution));
+  });
   const dotPosition = useTransform(displayProgress, [0, 1], ['0%', '100%']);
   return <div className="site-progress" aria-hidden="true"><div className="site-progress-track"><motion.i className="site-progress-fill" style={{ scaleY: displayProgress }} /><motion.b className="site-progress-dot" style={{ top: dotPosition }} /></div></div>;
 }
@@ -196,7 +199,7 @@ function ProjectCard({ project }: { project: Project }) {
   return <article className="project-card"><div className="project-image"><img src={project.image} alt={`${project.shortTitle} project placeholder`} /><span className="project-index">PROJECT / {String(projects.indexOf(project) + 1).padStart(2, '0')}</span></div><div className="project-body"><div><span className="project-kicker">{project.role ?? project.tech.slice(0, 3).join(' · ')}</span><h3>{project.title}</h3><p>{project.description}</p></div><div className="project-actions"><LinkButton href={project.github} label="GitHub" icon={<Github size={15} />} /><LinkButton href={project.demo} label="Live Demo" icon={<ExternalLink size={15} />} /></div></div></article>;
 }
 
-function Projects() {
+function Projects({ projectProgress }: { projectProgress: MotionValue<number> }) {
   const sectionRef = useRef<HTMLElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
@@ -212,6 +215,7 @@ function Projects() {
   const rawTrackX = useTransform([smoothScrollX, manualOffset], ([scrollPosition, manualPosition]) => Number(scrollPosition) + Number(manualPosition));
   const trackX = useTransform(rawTrackX, (position) => clampPosition(Number(position)));
   const galleryProgress = useTransform(trackX, (position) => travel > 0 ? Math.max(0, Math.min(1, -Number(position) / travel)) : 0);
+  useEffect(() => galleryProgress.on('change', (value) => projectProgress.set(Number(value))), [galleryProgress, projectProgress]);
   useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); setTravel(nextTravel); setScrollDistance(nextTravel); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
   const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse' && event.button !== 0) return; if (event.target instanceof Element && event.target.closest('a,button')) return; const position = clampPosition(smoothScrollX.get() + manualOffset.get()); dragStartRef.current = { pointerX: event.clientX, position }; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
   const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => { const start = dragStartRef.current; if (!start) return; const position = clampPosition(start.position + event.clientX - start.pointerX); manualOffset.set(position - smoothScrollX.get()); };
@@ -222,12 +226,30 @@ function Projects() {
 function Timeline({ items, kind }: { items: typeof education | typeof certifications; kind: 'education' | 'certifications' }) {
   const ref = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 55%'] });
-  const height = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  return <div ref={ref} className={`timeline ${kind}`}><motion.div className="timeline-progress" style={{ height }} />{items.map((item, index) => <Reveal key={'institution' in item ? item.institution : item.title} delay={index * .06}><div className="timeline-row"><div className="timeline-node" /><div className="timeline-card">{'institution' in item ? <><span className="timeline-date">{item.dates}</span><h3>{item.institution}</h3><p>{item.qualification}</p><strong>{item.detail}</strong></> : <><div className="cert-meta"><span className={`issuer-mark ${item.icon}`}>{issuerMarks[item.icon]}</span><span>{item.issuer}</span>{item.issued && <time>{item.issued}</time>}</div><h3>{item.title}</h3><a className={`credential-link ${item.credentialUrl ? '' : 'disabled'}`} href={item.credentialUrl ?? undefined} aria-disabled={!item.credentialUrl}>{item.credentialUrl ? <>View credential <ExternalLink size={14} /></> : <>Credential link pending <BadgeCheck size={14} /></>}</a></>}</div></div></Reveal>)}</div>;
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 82, damping: 24, mass: .65 });
+  const height = useTransform(smoothProgress, [0, 1], ['0%', '100%']);
+  const orderedItems = kind === 'certifications' ? [...items].reverse() : items;
+  return <div ref={ref} className={`timeline ${kind}`}><motion.div className="timeline-progress" style={{ height }} />{orderedItems.map((item, index) => <TimelineItem key={'institution' in item ? item.institution : `${item.title}-${index}`} item={item} index={index} kind={kind} progress={smoothProgress} />)}</div>;
+}
+
+function TimelineItem({ item, index, kind, progress }: { item: (typeof education)[number] | (typeof certifications)[number]; index: number; kind: 'education' | 'certifications'; progress: MotionValue<number> }) {
+  const count = kind === 'certifications' ? certifications.length : education.length;
+  const threshold = count > 1 ? index / (count - 1) : 0;
+  const visibility = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [0, 1]);
+  const lift = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [12, 0]);
+  const rowClass = kind === 'certifications' ? `cert-row ${index % 2 ? 'cert-right' : 'cert-left'}` : '';
+  const row = <motion.div className={`timeline-row ${rowClass}`} style={kind === 'certifications' ? { opacity: visibility, y: lift } : undefined}><div className="timeline-node" />{'institution' in item ? <div className="timeline-card"><span className="timeline-date">{item.dates}</span><h3>{item.institution}</h3><p>{item.qualification}</p><strong>{item.detail}</strong></div> : <CertificationCard item={item} />}</motion.div>;
+  return kind === 'certifications' ? row : <Reveal delay={index * .06}>{row}</Reveal>;
+}
+
+function CertificationCard({ item }: { item: (typeof certifications)[number] }) {
+  const className = `timeline-card cert-card ${item.credentialUrl ? 'is-link' : ''}`;
+  const content = <div className="cert-card-head"><span className={`issuer-mark ${item.icon}`}>{issuerMarks[item.icon]}</span><div className="cert-card-title"><span>{item.issuer}</span><h3>{item.title}</h3></div>{item.issued && <time>{item.issued}</time>}</div>;
+  return item.credentialUrl ? <a className={className} href={item.credentialUrl} target="_blank" rel="noreferrer" aria-label={`View ${item.title} credential`}>{content}</a> : <div className={className}>{content}</div>;
 }
 
 function Education() { return <section id="education" className="section-shell section-space"><SectionHeading eyebrow="04 / LEARNING PATH" title="Education" subtitle="The foundation behind the work I build." /><Timeline items={education} kind="education" /></section>; }
-function Certifications() { return <section id="certifications" className="section-shell section-space"><SectionHeading eyebrow="05 / CONTINUOUS GROWTH" title="Certifications" subtitle="Focused learning across frontend, backend, testing, and development workflows." /><Timeline items={certifications} kind="certifications" /></section>; }
+function Certifications() { return <section id="certifications" className="certifications-section section-shell section-space"><SectionHeading eyebrow="05 / CONTINUOUS GROWTH" title="Certifications" subtitle="Focused learning across frontend, backend, testing, and development workflows." /><Timeline items={certifications} kind="certifications" /></section>; }
 
 function Contact() {
   const formId = import.meta.env.VITE_FORMSPREE_FORM_ID as string | undefined;
@@ -243,6 +265,7 @@ function Footer() {
 
 export default function App() {
   const [active, setActive] = useState('home');
+  const projectProgress = useMotionValue(0);
   useEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = 'manual';
@@ -250,5 +273,5 @@ export default function App() {
     return () => { window.history.scrollRestoration = previousRestoration; };
   }, []);
   useEffect(() => { const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(entry.target.id); }), { rootMargin: '-35% 0px -55% 0px' }); navigation.forEach((item) => { const section = document.querySelector(item.href); if (section) observer.observe(section); }); return () => observer.disconnect(); }, []);
-  return <><Header active={active} /><ScrollProgress active={active} /><main><Hero /><TechStack /><Projects /><Education /><Certifications /><Contact /></main><Footer /></>;
+  return <><Header active={active} /><ScrollProgress active={active} projectProgress={projectProgress} /><main><Hero /><TechStack /><Projects projectProgress={projectProgress} /><Education /><Certifications /><Contact /></main><Footer /></>;
 }
