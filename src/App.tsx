@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEven
 import { useForm } from '@formspree/react';
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react';
 import {
-  ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, ChevronLeft, ChevronRight, ExternalLink,
+  ArrowDown, ArrowUp, ArrowUpRight, BadgeCheck, ExternalLink,
   Github, Linkedin, Mail, Menu, MessageCircle, Send, X
 } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
@@ -42,10 +42,15 @@ function Header({ active }: { active: string }) {
   </div></header>;
 }
 
-function ScrollProgress() {
+function ScrollProgress({ active }: { active: string }) {
   const { scrollYProgress } = useScroll();
-  const dotPosition = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
-  return <div className="site-progress" aria-hidden="true"><div className="site-progress-track"><motion.i className="site-progress-fill" style={{ scaleY: scrollYProgress }} /><motion.b className="site-progress-dot" style={{ top: dotPosition }} /></div></div>;
+  const frozenProgress = useMotionValue(0);
+  useEffect(() => {
+    if (active === 'projects') frozenProgress.set(scrollYProgress.get());
+  }, [active, frozenProgress, scrollYProgress]);
+  const displayProgress = active === 'projects' ? frozenProgress : scrollYProgress;
+  const dotPosition = useTransform(displayProgress, [0, 1], ['0%', '100%']);
+  return <div className="site-progress" aria-hidden="true"><div className="site-progress-track"><motion.i className="site-progress-fill" style={{ scaleY: displayProgress }} /><motion.b className="site-progress-dot" style={{ top: dotPosition }} /></div></div>;
 }
 
 function HangingCard() {
@@ -55,6 +60,7 @@ function HangingCard() {
   const [angle, setAngle] = useState(reduce ? 0 : -20);
   const [dragging, setDragging] = useState(false);
   const [mobile, setMobile] = useState(false);
+  const [hasScrolled, setHasScrolled] = useState(false);
   const tapeBend = angle * 0.9;
   const tapePath = `M 20 4 C ${20 + tapeBend} 88, ${20 + tapeBend} 188, 20 276`;
   const tapeLeftPath = `M 10 4 C ${10 + tapeBend * 0.82} 88, ${10 + tapeBend * 0.82} 188, 10 276`;
@@ -82,6 +88,13 @@ function HangingCard() {
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    const update = () => setHasScrolled(window.scrollY > 32);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
   }, []);
 
   const settle = () => {
@@ -133,7 +146,7 @@ function HangingCard() {
         <div className="badge-socials">{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer" aria-label={`${link.label} profile`} onPointerDown={(event) => event.stopPropagation()}><SocialIcon name={link.icon} /></a>)}<a href={`mailto:${personal.email}`} aria-label="Email Dineth" onPointerDown={(event) => event.stopPropagation()}><Mail size={17} /></a></div>
       </div>
     </motion.div>
-    <div className="hero-scroll-indicator" aria-hidden="true"><span>Scroll to explore</span><div className="scroll-pill"><i /></div></div>
+    <div className={`hero-scroll-indicator ${hasScrolled ? 'is-hidden' : ''}`} aria-hidden="true"><span>Scroll to explore</span><div className="scroll-pill"><i /></div></div>
   </div>;
 }
 
@@ -189,20 +202,21 @@ function Projects() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [travel, setTravel] = useState(0);
   const [scrollDistance, setScrollDistance] = useState(0);
-  const [mobileIndex, setMobileIndex] = useState(0);
   const [dragging, setDragging] = useState(false);
   const manualOffset = useMotionValue(0);
   const dragStartRef = useRef<{ pointerX: number; position: number } | null>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const scrollX = useTransform(scrollYProgress, [0, 1], [0, -travel]);
   const smoothScrollX = useSpring(scrollX, { stiffness: 78, damping: 28, mass: .55 });
-  const trackX = useTransform([smoothScrollX, manualOffset], ([scrollPosition, manualPosition]) => Number(scrollPosition) + Number(manualPosition));
   const clampPosition = (position: number) => Math.max(-travel, Math.min(0, position));
-  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); const isMobile = window.matchMedia('(max-width: 760px)').matches; setTravel(nextTravel); setScrollDistance(isMobile ? 0 : nextTravel * 1.55); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
+  const rawTrackX = useTransform([smoothScrollX, manualOffset], ([scrollPosition, manualPosition]) => Number(scrollPosition) + Number(manualPosition));
+  const trackX = useTransform(rawTrackX, (position) => clampPosition(Number(position)));
+  const galleryProgress = useTransform(trackX, (position) => travel > 0 ? Math.max(0, Math.min(1, -Number(position) / travel)) : 0);
+  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); setTravel(nextTravel); setScrollDistance(nextTravel); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
   const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse' && event.button !== 0) return; if (event.target instanceof Element && event.target.closest('a,button')) return; const position = clampPosition(smoothScrollX.get() + manualOffset.get()); dragStartRef.current = { pointerX: event.clientX, position }; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
   const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => { const start = dragStartRef.current; if (!start) return; const position = clampPosition(start.position + event.clientX - start.pointerX); manualOffset.set(position - smoothScrollX.get()); };
   const handleGalleryPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); dragStartRef.current = null; setDragging(false); };
-  return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /><div className="gallery-controls"><button onClick={() => setMobileIndex((i) => Math.max(0, i - 1))} aria-label="Previous project"><ChevronLeft /></button><button onClick={() => setMobileIndex((i) => Math.min(projects.length - 1, i + 1))} aria-label="Next project"><ChevronRight /></button></div></div><div className={`gallery-viewport ${dragging ? 'is-dragging' : ''}`} ref={viewportRef} onPointerDown={handleGalleryPointerDown} onPointerMove={handleGalleryPointerMove} onPointerUp={handleGalleryPointerUp} onPointerCancel={handleGalleryPointerUp}><motion.div className="project-track" ref={trackRef} style={{ x: trackX, ['--mobile-index' as string]: mobileIndex } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: scrollYProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
+  return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /></div><div className={`gallery-viewport ${dragging ? 'is-dragging' : ''}`} ref={viewportRef} onPointerDown={handleGalleryPointerDown} onPointerMove={handleGalleryPointerMove} onPointerUp={handleGalleryPointerUp} onPointerCancel={handleGalleryPointerUp}><motion.div className="project-track" ref={trackRef} style={{ x: trackX } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: galleryProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
 }
 
 function Timeline({ items, kind }: { items: typeof education | typeof certifications; kind: 'education' | 'certifications' }) {
@@ -229,6 +243,12 @@ function Footer() {
 
 export default function App() {
   const [active, setActive] = useState('home');
+  useEffect(() => {
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    if (!window.location.hash) window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    return () => { window.history.scrollRestoration = previousRestoration; };
+  }, []);
   useEffect(() => { const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(entry.target.id); }), { rootMargin: '-35% 0px -55% 0px' }); navigation.forEach((item) => { const section = document.querySelector(item.href); if (section) observer.observe(section); }); return () => observer.disconnect(); }, []);
-  return <><Header active={active} /><ScrollProgress /><main><Hero /><TechStack /><Projects /><Education /><Certifications /><Contact /></main><Footer /></>;
+  return <><Header active={active} /><ScrollProgress active={active} /><main><Hero /><TechStack /><Projects /><Education /><Certifications /><Contact /></main><Footer /></>;
 }
