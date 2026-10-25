@@ -8,8 +8,6 @@ import {
 import { SiWhatsapp } from 'react-icons/si';
 import { certifications, education, navigation, personal, projects, socialLinks, techStack, type Project } from './data';
 
-const issuerMarks: Record<string, string> = { meta: 'M', packt: 'P', datacamp: 'DC', umich: 'M', ibm: 'IBM', uom: 'UoM' };
-
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const visible = useInView(ref, { once: false, margin: '-15% 0px -15% 0px' });
@@ -259,7 +257,7 @@ function EducationCard({ item }: { item: (typeof education)[number] }) {
 
 function CertificationCard({ item }: { item: (typeof certifications)[number] }) {
   const className = `timeline-card cert-card ${item.credentialUrl ? 'is-link' : ''}`;
-  const content = <div className="cert-card-head"><span className={`issuer-mark ${item.icon}`}>{issuerMarks[item.icon]}</span><div className="cert-card-title"><span title={item.issuer}>{item.issuer}</span><h3 title={item.title}>{item.title}</h3></div>{item.issued && <time>{item.issued}</time>}</div>;
+  const content = <div className="cert-card-head"><span className={`cert-issuer-logo ${item.icon}`}><img src={`/images/certifications/${item.icon}.png`} alt="" width={512} height={512} loading="lazy" decoding="async" /></span><div className="cert-card-title"><span title={item.issuer}>{item.issuer}</span><h3 title={item.title}>{item.title}</h3></div>{item.issued && <time>{item.issued}</time>}</div>;
   return item.credentialUrl ? <a className={className} href={item.credentialUrl} target="_blank" rel="noreferrer" aria-label={`View ${item.title} credential`}>{content}</a> : <div className={className}>{content}</div>;
 }
 
