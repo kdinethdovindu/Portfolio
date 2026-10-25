@@ -102,8 +102,8 @@ export const projects: Project[] = [
 ];
 
 export const education = [
-  { institution: 'University of Moratuwa', qualification: 'Bachelor of Science Honours in Information Technology & Management', dates: '2024 – Present', detail: 'CGPA: 3.64 / 4.00' },
-  { institution: 'Richmond College, Galle', qualification: 'G.C.E. Advanced Level', dates: '2020 – 2023', detail: '3 A Passes' }
+  { institution: 'University of Moratuwa', qualification: 'Bachelor of Science Honours in Information Technology & Management', dates: '2024 – Present' },
+  { institution: 'Richmond College, Galle', qualification: 'G.C.E. Advanced Level', dates: '2020 – 2023' }
 ];
 
 export const certifications: Certificate[] = [

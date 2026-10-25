@@ -238,13 +238,13 @@ function TimelineItem({ item, index, kind, progress }: { item: (typeof education
   const visibility = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [0, 1]);
   const lift = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [12, 0]);
   const rowClass = kind === 'certifications' ? `cert-row ${index % 2 ? 'cert-right' : 'cert-left'}` : '';
-  const row = <motion.div className={`timeline-row ${rowClass}`} style={kind === 'certifications' ? { opacity: visibility, y: lift } : undefined}><div className="timeline-node" />{'institution' in item ? <div className="timeline-card"><span className="timeline-date">{item.dates}</span><h3>{item.institution}</h3><p>{item.qualification}</p><strong>{item.detail}</strong></div> : <CertificationCard item={item} />}</motion.div>;
+  const row = <motion.div className={`timeline-row ${rowClass}`} style={kind === 'certifications' ? { opacity: visibility, y: lift } : undefined}><div className="timeline-node" />{'institution' in item ? <div className="timeline-card"><span className="timeline-date">{item.dates}</span><h3>{item.institution}</h3><p>{item.qualification}</p></div> : <CertificationCard item={item} />}</motion.div>;
   return kind === 'certifications' ? row : <Reveal delay={index * .06}>{row}</Reveal>;
 }
 
 function CertificationCard({ item }: { item: (typeof certifications)[number] }) {
   const className = `timeline-card cert-card ${item.credentialUrl ? 'is-link' : ''}`;
-  const content = <div className="cert-card-head"><span className={`issuer-mark ${item.icon}`}>{issuerMarks[item.icon]}</span><div className="cert-card-title"><span>{item.issuer}</span><h3>{item.title}</h3></div>{item.issued && <time>{item.issued}</time>}</div>;
+  const content = <div className="cert-card-head"><span className={`issuer-mark ${item.icon}`}>{issuerMarks[item.icon]}</span><div className="cert-card-title"><span title={item.issuer}>{item.issuer}</span><h3 title={item.title}>{item.title}</h3></div>{item.issued && <time>{item.issued}</time>}</div>;
   return item.credentialUrl ? <a className={className} href={item.credentialUrl} target="_blank" rel="noreferrer" aria-label={`View ${item.title} credential`}>{content}</a> : <div className={className}>{content}</div>;
 }
 
