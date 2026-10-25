@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { SiWhatsapp } from 'react-icons/si';
 import { certifications, education, navigation, personal, projects, socialLinks, techStack, type Project } from './data';
+import { useSmoothScroll } from './useSmoothScroll';
 
 function Reveal({ children, className = '', delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -277,6 +278,7 @@ function Footer() {
 }
 
 export default function App() {
+  useSmoothScroll();
   const [active, setActive] = useState('home');
   const projectProgress = useMotionValue(0);
   useEffect(() => {
