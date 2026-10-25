@@ -238,8 +238,23 @@ function TimelineItem({ item, index, kind, progress }: { item: (typeof education
   const visibility = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [0, 1]);
   const lift = useTransform(progress, [Math.max(0, threshold - .08), Math.min(1, threshold + .08)], [12, 0]);
   const rowClass = kind === 'certifications' ? `cert-row ${index % 2 ? 'cert-right' : 'cert-left'}` : '';
-  const row = <motion.div className={`timeline-row ${rowClass}`} style={kind === 'certifications' ? { opacity: visibility, y: lift } : undefined}><div className="timeline-node" />{'institution' in item ? <div className="timeline-card"><span className="timeline-date">{item.dates}</span><h3>{item.institution}</h3><p>{item.qualification}</p></div> : <CertificationCard item={item} />}</motion.div>;
+  const row = <motion.div className={`timeline-row ${rowClass}`} style={kind === 'certifications' ? { opacity: visibility, y: lift } : undefined}><div className="timeline-node" />{'institution' in item ? <EducationCard item={item} /> : <CertificationCard item={item} />}</motion.div>;
   return kind === 'certifications' ? row : <Reveal delay={index * .06}>{row}</Reveal>;
+}
+
+function EducationCard({ item }: { item: (typeof education)[number] }) {
+  return (
+    <div className="timeline-card education-card">
+      <div className="education-card-info">
+        <span className="timeline-date">{item.dates}</span>
+        <h3>{item.institution}</h3>
+        <p>{item.qualification}</p>
+      </div>
+      <div className="education-card-image">
+        <img src={item.image} alt={`${item.institution} campus and badge`} loading="lazy" decoding="async" width={2079} height={756} />
+      </div>
+    </div>
+  );
 }
 
 function CertificationCard({ item }: { item: (typeof certifications)[number] }) {
