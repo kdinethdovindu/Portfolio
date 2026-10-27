@@ -51,6 +51,7 @@ button { cursor: pointer; }
 .talk-button:hover, .primary-button:hover { background: var(--accent-soft); transform: translateY(-2px); }
 .menu-button { display: none; margin-left: auto; border: 0; background: transparent; color: var(--text); }
 .site-progress { position: fixed; z-index: 25; top: 50%; right: 18px; width: 10px; height: 112px; transform: translateY(-50%); pointer-events: none; }
+@media (max-width: 760px) { .site-progress { display: none; } }
 .site-progress-track { position: relative; width: 2px; height: 100%; margin: 0 auto; border-radius: 999px; background: rgba(255,255,255,.14); }
 .site-progress-fill { position: absolute; inset: 0; display: block; border-radius: inherit; background: var(--accent); box-shadow: 0 0 12px rgba(249,115,22,.55); transform-origin: top; }
 .site-progress-dot { position: absolute; left: 50%; width: 8px; height: 8px; border: 2px solid var(--bg); border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 1px rgba(249,115,22,.75), 0 0 10px rgba(249,115,22,.45); transform: translate(-50%, -50%); }

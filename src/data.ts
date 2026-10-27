@@ -78,26 +78,53 @@ export const projects: Project[] = [
     description: 'An industry-collaborative credit risk assessment web application developed with Team MetaMinds, featuring customer credit assessment workflows, profile management, and integrated notifications.',
     role: 'Team Leader and Full-Stack Contributor',
     tech: ['React', 'Next.js', 'TypeScript', 'Java', 'Spring Boot', 'PostgreSQL'],
-    image: '/images/projects/primecore-placeholder.svg', github: null, demo: null
+    image: '/images/projects/PrimeCore_Credit_Intelligence_Showcase.png',
+    github: 'https://github.com/Metaminds-BankWebApp',
+    demo: 'https://bank-web-app-theta.vercel.app'
   },
   {
     title: 'Personal Task Manager — Full-Stack Web Application', shortTitle: 'Task Manager',
     description: 'A full-stack personal task management application built with React and Spring Boot, featuring authentication and task management functionality.',
     tech: ['React', 'Java', 'Spring Boot', 'JWT', 'PostgreSQL'],
-    image: '/images/projects/task-manager-placeholder.svg', github: null, demo: null
+    image: '/images/projects/Personal Task Manager Showcase.png',
+    github: 'https://github.com/kdinethdovindu/personal-task-manager-frontend',
+    demo: 'https://personal-task-manager-frontend-six.vercel.app/register'
+  },
+  {
+    title: 'MOVEONE | Transportation in 2100 — Cre8X 3.0', shortTitle: 'MOVEONE',
+    description: 'A futuristic smart-city transportation web application developed for Cre8X 3.0, featuring multimodal journey planning, route comparison, a rule-based Journey AI assistant, simulated booking with QR tickets, and live-tracking demonstrations.',
+    role: 'Frontend Contributor',
+    tech: ['React.js', 'Vite', 'JavaScript', 'CSS', 'PWA', 'Vercel'],
+    image: '/images/projects/MoveOne Futuristic Transport Showcase.png', 
+    github: 'https://github.com/PixelCraft-Cre8X/transport-2100', 
+    demo: 'https://transport-2100-ashy.vercel.app'
   },
   {
     title: 'CareerTrack — Job Application Tracker', shortTitle: 'CareerTrack',
     description: 'A responsive React application designed to help users organize and monitor their job applications.',
+    role: 'Frontend Developer',
     tech: ['React', 'JavaScript', 'Vite', 'Context API', 'localStorage'],
-    image: '/images/projects/careertrack-placeholder.svg', github: null, demo: null
+    image: '/images/projects/Career Track App Showcase.png', 
+    github: 'https://github.com/kdinethdovindu/React-job-tracker', 
+    demo: 'https://react-job-tracker-henna.vercel.app/'
+  },
+  {
+    title: 'BlogApp — Full-Stack Blogging Platform', shortTitle: 'BlogApp',
+    description: 'A responsive blogging platform built with PHP, MySQL, HTML, CSS, and JavaScript. Users can register and log in, create and manage posts, and preview content with Markdown.',
+    role: 'Full-Stack Developer',
+    tech: ['PHP', 'MySQL', 'HTML', 'CSS', 'JavaScript'],
+    image: '/images/projects/BlogApp Dark Tech Showcase.png', 
+    github: 'https://github.com/kdinethdovindu/blog-Web', 
+    demo: 'https://blog-web-ecru-delta.vercel.app'
   },
   {
     title: 'Luna Smart Storytelling Robot', shortTitle: 'Luna',
     description: 'A browser-based control interface developed for the Luna Smart Storytelling Robot, integrating web controls with robot functionality.',
     role: 'Frontend and Flask API Contributor',
     tech: ['HTML', 'CSS', 'JavaScript', 'Python', 'Flask'],
-    image: '/images/projects/luna-placeholder.svg', github: null, demo: null
+    image: '/images/projects/Luna Smart Robot Control Centre.png', 
+    github: 'https://github.com/kdinethdovindu/Luna-Code-Base', 
+    demo: null
   }
 ];
 
