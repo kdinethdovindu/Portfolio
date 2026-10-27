@@ -23,8 +23,8 @@ export const personal = {
   linkedin: 'https://www.linkedin.com/in/dineth-dovindu-ba801a383/',
   github: 'https://github.com/kdinethdovindu',
   location: 'Sri Lanka',
-  cvPath: '/resume/Dineth_Dovindu_CV.pdf',
-  cvAvailable: false
+  cvPath: '/resume/Dineth_Dovindu_v.2 CV.pdf',
+  cvAvailable: true
 };
 
 export const socialLinks: SocialLink[] = [
