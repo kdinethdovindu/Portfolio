@@ -288,5 +288,5 @@ export default function App() {
     return () => { window.history.scrollRestoration = previousRestoration; };
   }, []);
   useEffect(() => { const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(entry.target.id); }), { rootMargin: '-35% 0px -55% 0px' }); navigation.forEach((item) => { const section = document.querySelector(item.href); if (section) observer.observe(section); }); return () => observer.disconnect(); }, []);
-  return <><Header active={active} /><ScrollProgress active={active} projectProgress={projectProgress} /><main><Hero /><TechStack /><Projects projectProgress={projectProgress} /><Education /><Certifications /><Contact /></main><Footer /></>;
+  return <><Header active={active} /><ScrollProgress active={active} projectProgress={projectProgress} /><div className="site-background-art" aria-hidden="true"><img className="background-art background-art-left" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20left.png" alt="" /><img className="background-art background-art-right" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20right.png" alt="" /></div><main><div className="home-section-overlay"><Hero /></div><TechStack /><Projects projectProgress={projectProgress} /><Education /><Certifications /><Contact /></main><Footer /></>;
 }
