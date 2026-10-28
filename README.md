@@ -28,7 +28,7 @@ npm run check
 
 All editable content lives in [src/data.ts](src/data.ts): personal details, social links, navigation, technology cards, projects, education, and certificates.
 
-- Replace the profile image at `public/images/Professional_Portrait.png` if needed.
+- Replace the profile image at `public/images/Professional_Portrait.webp` if needed.
 - Replace project images in `public/images/projects/` and update each `image` path in `src/data.ts`.
 - Add GitHub and demo URLs by changing `github` and `demo` from `null` in `src/data.ts`. A null URL stays disabled and never redirects to a fake destination.
 - Add certificate verification URLs in each `credentialUrl` field.
