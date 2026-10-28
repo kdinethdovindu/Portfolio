@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { useForm } from '@formspree/react';
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
@@ -31,6 +31,74 @@ function SocialIcon({ name, size = 17 }: { name: string; size?: number }) {
   return <MessageCircle size={size} />;
 }
 
+function PageLoader({ onComplete }: { onComplete: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [exiting, setExiting] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const reduce = useReducedMotion();
+
+  useEffect(() => {
+    const images = Array.from(document.images);
+    let finished = false;
+    let cancelled = false;
+    let finishTimer: number | undefined;
+    const stageTimers: number[] = [];
+    const startedAt = performance.now();
+    const minimumDuration = reduce ? 250 : 1850;
+    const previousOverflow = document.body.style.overflow;
+    const imagePromises = images.map((image) => {
+      if (image.complete) return Promise.resolve();
+      return new Promise<void>((resolve) => {
+        const done = () => { image.removeEventListener('load', done); image.removeEventListener('error', done); resolve(); };
+        image.addEventListener('load', done, { once: true });
+        image.addEventListener('error', done, { once: true });
+      });
+    });
+    const pageReady = document.readyState === 'complete'
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => window.addEventListener('load', () => resolve(), { once: true }));
+    const finish = async () => {
+      // A broken or stalled external asset should never keep the portfolio behind the loader.
+      await Promise.race([
+        Promise.all([pageReady, ...imagePromises]),
+        new Promise<void>((resolve) => window.setTimeout(resolve, 2200)),
+      ]);
+      const remaining = Math.max(0, minimumDuration - (performance.now() - startedAt));
+      finishTimer = window.setTimeout(() => {
+        if (cancelled) return;
+        if (finished) return;
+        finished = true;
+        stageTimers.forEach((timer) => window.clearTimeout(timer));
+        setProgress(100);
+        // Prepare the homepage underneath the opaque curtain before it starts moving away.
+        onComplete();
+        setExiting(true);
+        window.setTimeout(() => { if (!cancelled) { document.body.style.overflow = previousOverflow; setVisible(false); } }, reduce ? 180 : 1120);
+      }, remaining);
+    };
+    stageTimers.push(window.setTimeout(() => { if (!cancelled) setProgress(30); }, reduce ? 0 : 450));
+    stageTimers.push(window.setTimeout(() => { if (!cancelled) setProgress(55); }, reduce ? 0 : 950));
+    stageTimers.push(window.setTimeout(() => { if (!cancelled) setProgress(79); }, reduce ? 0 : 1450));
+    void finish();
+    document.body.style.overflow = 'hidden';
+    return () => { cancelled = true; if (finishTimer) window.clearTimeout(finishTimer); stageTimers.forEach((timer) => window.clearTimeout(timer)); document.body.style.overflow = previousOverflow; };
+  }, [onComplete, reduce]);
+
+  if (!visible) return null;
+  return <div className={`page-loader ${exiting ? 'is-exiting' : ''}`} aria-live="polite" aria-label={`Loading portfolio ${progress}%`}>
+    <div className="loader-grid" aria-hidden="true" />
+    <div className="loader-orbit loader-orbit-one" aria-hidden="true" />
+    <div className="loader-orbit loader-orbit-two" aria-hidden="true" />
+    <div className="loader-content">
+      <div className="loader-mark"><img src="/DD_Loading_Page.png" alt="Dineth Dovindu logo" /></div>
+      <p className="loader-kicker">DINETH DOVINDU / PORTFOLIO</p>
+      <h1>Loading<span className="loader-dots" aria-hidden="true">...</span></h1>
+      <div className="loader-status"><span>PORTFOLIO</span><strong>{String(progress).padStart(2, '0')}%</strong></div>
+      <div className="loader-progress"><i style={{ transform: `scaleX(${progress / 100})` }} /></div>
+    </div>
+  </div>;
+}
+
 function Header({ active }: { active: string }) {
   const [open, setOpen] = useState(false);
   return <header className="site-header"><div className="nav-shell">
@@ -56,7 +124,7 @@ function ScrollProgress({ active, projectProgress }: { active: string; projectPr
   return <div className="site-progress" aria-hidden="true"><div className="site-progress-track"><motion.i className="site-progress-fill" style={{ scaleY: displayProgress }} /><motion.b className="site-progress-dot" style={{ top: dotPosition }} /></div></div>;
 }
 
-function HangingCard() {
+function HangingCard({ introComplete }: { introComplete: boolean }) {
   const reduce = useReducedMotion();
   const anchorRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
@@ -70,7 +138,7 @@ function HangingCard() {
   const tapeRightPath = `M 30 4 C ${30 + tapeBend * 0.82} 88, ${30 + tapeBend * 0.82} 188, 30 276`;
 
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || !introComplete) return;
     const startedAt = performance.now();
     const tick = (now: number) => {
       const elapsed = (now - startedAt) / 1000;
@@ -83,7 +151,7 @@ function HangingCard() {
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => { if (frameRef.current !== null) cancelAnimationFrame(frameRef.current); };
-  }, [reduce]);
+  }, [introComplete, reduce]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 760px)');
@@ -175,10 +243,10 @@ function TypewriterName() {
   return <h1 aria-label={fullName}>{firstName}{!lastName && <i className="typing-caret" aria-hidden="true" />}<br /><span>{lastName}{lastName && <i className="typing-caret" aria-hidden="true" />}</span></h1>;
 }
 
-function Hero() {
+function Hero({ introComplete }: { introComplete: boolean }) {
   return <section id="home" className="hero section-shell"><div className="hero-glow" aria-hidden="true" /><div className="hero-grid">
     <Reveal className="hero-intro"><span className="eyebrow">HELLO, I'M</span><TypewriterName /><p className="hero-role">Full-Stack Developer</p><p className="hero-copy">Building modern, secure, and scalable web applications using React, Spring Boot, and modern development technologies.</p><div className="hero-actions">{personal.cvAvailable ? <a className="primary-button" href={personal.cvPath} download="Dineth_Dovindu_CV.pdf">Download CV <ArrowDown size={16} /></a> : <span className="primary-button disabled-button" aria-disabled="true">CV coming soon <ArrowDown size={16} /></span>}<a className="talk-button" href="#contact">Let's Talk <ArrowUpRight size={16} /></a></div></Reveal>
-    <HangingCard />
+    <HangingCard introComplete={introComplete} />
     <Reveal className="hero-about" delay={.1}><span className="eyebrow">A LITTLE ABOUT ME</span><h2>Curious by nature.<br /><em>Focused on impact.</em></h2><p>I'm an Information Technology & Management undergraduate at the University of Moratuwa, Sri Lanka, passionate about full-stack web development and problem solving. I enjoy building practical applications with React, Java, Spring Boot, and modern web technologies.</p><p>I'm preparing for opportunities in professional software engineering where thoughtful products and reliable systems meet.</p></Reveal>
   </div></section>;
 }
@@ -273,7 +341,7 @@ function Contact() {
   const [state, handleSubmit] = useForm(formId || 'disabled');
   const [fallback, setFallback] = useState(false);
   const submit = (event: FormEvent<HTMLFormElement>) => { if (!formId) { event.preventDefault(); setFallback(true); return; } void handleSubmit(event); };
-  return <section id="contact" className="section-shell contact-section section-space"><div className="contact-grid"><Reveal className="contact-copy"><span className="eyebrow">06 / GET IN TOUCH</span><h2>Let's Work<br /><em>Together.</em></h2><p>Have a project idea, opportunity, or question? Feel free to reach out. I'm always interested in connecting and exploring new opportunities.</p><div className="contact-links"><a href={`mailto:${personal.email}`}><Mail size={18} /><span><small>Email</small>{personal.email}</span><ArrowUpRight size={16} /></a>{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer"><SocialIcon name={link.icon} size={18} /><span><small>{link.label}</small>{link.label === 'WhatsApp' ? 'Chat on WhatsApp' : `Connect on ${link.label}`}</span><ArrowUpRight size={16} /></a>)}</div></Reveal><Reveal className="contact-form-wrap" delay={.12}><form className="contact-form" onSubmit={submit} noValidate><div className="form-heading"><span className="eyebrow">SEND A MESSAGE</span><p>I'll get back to you as soon as possible.</p></div><label>Full Name<input name="name" type="text" placeholder="Your name" required /></label><label>Email Address<input name="email" type="email" placeholder="you@example.com" required /></label><label>Subject <span className="muted">(optional)</span><input name="subject" type="text" placeholder="How can I help?" /></label><label>Message<textarea name="message" rows={4} placeholder="Tell me a little about your project..." required /></label>{state.errors && <p className="form-error" role="alert">Something went wrong while sending. Please try again or email me directly.</p>}{state.succeeded && <p className="form-success" role="status">Message sent — thank you for reaching out.</p>}{fallback && <p className="form-error" role="alert">The form is being configured. Use the email fallback below to send your message.</p>}<div className="form-footer"><button className="primary-button" type="submit" disabled={state.submitting}>{state.submitting ? 'Sending…' : 'Send Message'} <Send size={16} /></button><a className="email-fallback" href={`mailto:${personal.email}`}>Email Me Instead <ArrowUpRight size={14} /></a></div></form></Reveal></div></section>;
+  return <section id="contact" className="section-shell contact-section section-space"><div className="contact-grid"><Reveal className="contact-copy"><span className="eyebrow">06 / GET IN TOUCH</span><h2>Let's Work<br /><em>Together.</em></h2><p>Have a project idea, opportunity, or question? Feel free to reach out. I'm always interested in connecting and exploring new opportunities.</p><div className="contact-links"><a href={`mailto:${personal.email}`}><Mail size={18} /><span><small>Email</small>{personal.email}</span><ArrowUpRight size={16} /></a>{socialLinks.map((link) => <a key={link.label} href={link.href} target="_blank" rel="noreferrer"><SocialIcon name={link.icon} size={18} /><span><small>{link.label}</small>{link.label === 'WhatsApp' ? 'Chat on WhatsApp' : `Connect on ${link.label}`}</span><ArrowUpRight size={16} /></a>)}</div></Reveal><Reveal className="contact-form-wrap" delay={.12}><form className="contact-form" onSubmit={submit} noValidate><div className="form-heading"><span className="eyebrow">SEND A MESSAGE</span><p>I'll get back to you as soon as possible.</p></div><label>Full Name<input name="name" type="text" placeholder="Your name" required /></label><label>Email Address<input name="email" type="email" placeholder="you@example.com" required /></label><label>Subject<input name="subject" type="text" placeholder="How can I help?" /></label><label>Message<textarea name="message" rows={4} placeholder="Tell me a little about your project..." required /></label>{state.errors && <p className="form-error" role="alert">Something went wrong while sending. Please try again or email me directly.</p>}{state.succeeded && <p className="form-success" role="status">Message sent — thank you for reaching out.</p>}{fallback && <p className="form-error" role="alert">The form is being configured. Use the email fallback below to send your message.</p>}<div className="form-footer"><button className="primary-button" type="submit" disabled={state.submitting}>{state.submitting ? 'Sending…' : 'Send Message'} <Send size={16} /></button><a className="email-fallback" href={`mailto:${personal.email}`}>Email Me Instead <ArrowUpRight size={14} /></a></div></form></Reveal></div></section>;
 }
 
 function Footer() {
@@ -283,7 +351,9 @@ function Footer() {
 export default function App() {
   useSmoothScroll();
   const [active, setActive] = useState('home');
+  const [introComplete, setIntroComplete] = useState(false);
   const projectProgress = useMotionValue(0);
+  const handleLoaderComplete = useCallback(() => setIntroComplete(true), []);
   useEffect(() => {
     const previousRestoration = window.history.scrollRestoration;
     window.history.scrollRestoration = 'manual';
@@ -291,5 +361,5 @@ export default function App() {
     return () => { window.history.scrollRestoration = previousRestoration; };
   }, []);
   useEffect(() => { const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setActive(entry.target.id); }), { rootMargin: '-35% 0px -55% 0px' }); navigation.forEach((item) => { const section = document.querySelector(item.href); if (section) observer.observe(section); }); return () => observer.disconnect(); }, []);
-  return <><Header active={active} /><ScrollProgress active={active} projectProgress={projectProgress} /><div className="site-background-art" aria-hidden="true"><img className="background-art background-art-left" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20left.png" alt="" /><img className="background-art background-art-right" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20right.png" alt="" /></div><main><div className="home-section-overlay"><Hero /></div><TechStack /><Projects projectProgress={projectProgress} /><Education /><Certifications /><Contact /></main><Footer /></>;
+  return <><PageLoader onComplete={handleLoaderComplete} /><Header active={active} /><ScrollProgress active={active} projectProgress={projectProgress} /><div className="site-background-art" aria-hidden="true"><img className="background-art background-art-left" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20left.png" alt="" /><img className="background-art background-art-right" src="/images/Background/Glitch%20ASCII%20Hacker%20Portrait%20right.png" alt="" /></div><main className={`site-main ${introComplete ? 'is-ready' : ''}`}><div className="home-section-overlay"><Hero introComplete={introComplete} /></div><TechStack /><Projects projectProgress={projectProgress} /><Education /><Certifications /><Contact /></main><Footer /></>;
 }
