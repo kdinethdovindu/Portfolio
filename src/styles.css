@@ -39,7 +39,7 @@ button { cursor: pointer; }
 .site-header { position: fixed; z-index: 30; top: 0; width: 100%; padding: 18px 0; background: linear-gradient(180deg, rgba(14,14,16,.9), rgba(14,14,16,0)); }
 .nav-shell { width: min(var(--max), calc(100% - 56px)); margin: 0 auto; display: flex; align-items: center; gap: 28px; }
 .brand { display: inline-flex; align-items: center; gap: 11px; flex-shrink: 0; }
-.brand span { display: grid; place-items: center; width: 37px; height: 37px; border-radius: 10px; background: var(--accent); color: var(--bg); font: 700 .84rem 'Space Grotesk'; }
+.brand img { display: block; width: 37px; height: 37px; border-radius: 10px; object-fit: cover; background: var(--bg); }
 .brand small { font: 600 .72rem 'Space Grotesk'; letter-spacing: .12em; }
 .desktop-nav { display: flex; justify-content: flex-end; align-items: center; gap: 24px; flex: 1; }
 .desktop-nav a { position: relative; padding: 8px 0; color: var(--muted); font-size: .75rem; transition: color .2s ease; }

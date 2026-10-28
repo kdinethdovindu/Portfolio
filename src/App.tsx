@@ -34,7 +34,7 @@ function SocialIcon({ name, size = 17 }: { name: string; size?: number }) {
 function Header({ active }: { active: string }) {
   const [open, setOpen] = useState(false);
   return <header className="site-header"><div className="nav-shell">
-    <a href="#home" className="brand" aria-label="Dineth Dovindu home"><span>DD</span><small>DINETH DOVINDU</small></a>
+    <a href="#home" className="brand" aria-label="Dineth Dovindu home"><img src="/DD_Logo.png" alt="" /><small>DINETH DOVINDU</small></a>
     <nav id="primary-navigation" className={`desktop-nav ${open ? 'mobile-open' : ''}`} aria-label="Primary navigation">
       {navigation.map((item) => <a key={item.href} className={active === item.href.slice(1) ? 'active' : ''} href={item.href} onClick={() => setOpen(false)}>{item.label}</a>)}
     </nav>
