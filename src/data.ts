@@ -1,5 +1,3 @@
-import type { ComponentType } from 'react';
-
 export type SocialLink = { label: string; href: string; icon: string };
 export type Project = {
   title: string;
@@ -11,7 +9,7 @@ export type Project = {
   github: string | null;
   demo: string | null;
 };
-export type TechItem = { name: string; group: string; icon: string; color: string; image?: string };
+export type TechItem = { name: string; group: 'Frontend' | 'Backend' | 'Databases' | 'Tools'; icon: string; color: string; image: string };
 export type Certificate = { title: string; issuer: string; issued?: string; icon: string; credentialUrl: string | null };
 
 export const personal = {
@@ -146,5 +144,3 @@ export const certifications: Certificate[] = [
   { title: 'Java Programming for Beginners', issuer: 'IBM', issued: 'March 2026', icon: 'ibm', credentialUrl: null },
   { title: 'Web Design for beginners', issuer: 'University of Moratuwa', icon: 'uom', credentialUrl: null }
 ];
-
-export type IconComponent = ComponentType<{ size?: number; strokeWidth?: number }>;

@@ -18,15 +18,21 @@ npm run build
 npm run preview
 ```
 
+Run the full pre-deployment check with:
+
+```bash
+npm run check
+```
+
 ## Edit the portfolio
 
 All editable content lives in [src/data.ts](src/data.ts): personal details, social links, navigation, technology cards, projects, education, and certificates.
 
-- Replace `public/images/profile-placeholder.svg` with `public/images/profile.jpg` and update the profile image path in `src/App.tsx`.
-- Replace project placeholders in `public/images/projects/` and update each `image` path in `src/data.ts`.
+- Replace the profile image at `public/images/Professional_Portrait.png` if needed.
+- Replace project images in `public/images/projects/` and update each `image` path in `src/data.ts`.
 - Add GitHub and demo URLs by changing `github` and `demo` from `null` in `src/data.ts`. A null URL stays disabled and never redirects to a fake destination.
 - Add certificate verification URLs in each `credentialUrl` field.
-- Add the supplied CV at `public/resume/Dineth_Dovindu_CV.pdf`, then set `cvAvailable: true` in `src/data.ts` to enable the Download CV button.
+- Set `cvAvailable` in `src/data.ts` to control the Download CV button. The current file is `public/resume/Dineth_Dovindu_v.2 CV.pdf`.
 
 ## Formspree
 
@@ -49,4 +55,4 @@ If the variable is empty, the form explains that setup is pending and the **Emai
 
 ## Placeholder policy
 
-Project links, certificate links, the profile photo, screenshots, education logos, and the CV are replacement-ready placeholders. No invented credential or project destination is included.
+Certificate links can be added in `src/data.ts` when verification URLs are available. Project links and the current profile, education, screenshot, and CV assets are already wired to the site.
