@@ -90,7 +90,15 @@ function PageLoader({ onComplete }: { onComplete: () => void }) {
     <div className="loader-orbit loader-orbit-one" aria-hidden="true" />
     <div className="loader-orbit loader-orbit-two" aria-hidden="true" />
     <div className="loader-content">
-      <div className="loader-mark"><img src="/DD_Loading_Page.webp" alt="Dineth Dovindu logo" /></div>
+      <div className="loader-mark">
+        <svg className="loader-mark-fallback" viewBox="0 0 100 100" role="img" aria-label="Dineth Dovindu logo">
+          <circle cx="50" cy="50" r="47" />
+          <path d="M22 69V31h19c12 0 20 7 20 19s-8 19-20 19H22Zm10-9h8c6 0 10-3 10-10s-4-10-10-10h-8v20Z" />
+          <path d="M55 69V31h19c12 0 20 7 20 19s-8 19-20 19H55Zm10-9h8c6 0 10-3 10-10s-4-10-10-10h-8v20Z" />
+          <path d="m57 18-14 27h10L43 82l15-29H48l9-35Z" />
+        </svg>
+        <img src="/DD_Loading_Page.webp" alt="" aria-hidden="true" />
+      </div>
       <p className="loader-kicker">DINETH DOVINDU / PORTFOLIO</p>
       <h1>Loading<span className="loader-dots" aria-hidden="true">...</span></h1>
       <div className="loader-status"><span>PORTFOLIO</span><strong>{String(progress).padStart(2, '0')}%</strong></div>

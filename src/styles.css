@@ -33,8 +33,11 @@ button { cursor: pointer; }
 .loader-orbit-one { width: min(72vw, 780px); aspect-ratio: 1; animation: loader-orbit-spin 18s linear infinite; }
 .loader-orbit-two { width: min(45vw, 500px); aspect-ratio: 1; border-color: rgba(255,255,255,.16); background: radial-gradient(circle, rgba(255,255,255,.035) 0%, transparent 68%); box-shadow: 0 0 18px rgba(255,255,255,.08), 0 0 44px rgba(249,115,22,.08), inset 0 0 26px rgba(255,255,255,.04); animation: loader-orbit-spin 12s linear infinite reverse; }
 .loader-content { position: relative; z-index: 1; display: flex; width: min(520px, calc(100% - 44px)); flex-direction: column; align-items: center; text-align: center; }
-.loader-mark { width: 96px; height: 96px; margin-bottom: 28px; overflow: hidden; border-radius: 50%; box-shadow: 0 0 0 8px rgba(249,115,22,.04), 0 0 34px rgba(249,115,22,.16); animation: loader-mark-pulse 2.2s ease-in-out infinite; }
-.loader-mark img { display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(.75); }
+.loader-mark { position: relative; display: grid; width: 96px; height: 96px; margin-bottom: 28px; overflow: hidden; place-items: center; border-radius: 50%; background: #101114; box-shadow: 0 0 0 8px rgba(249,115,22,.04), 0 0 34px rgba(249,115,22,.16); animation: loader-mark-pulse 2.2s ease-in-out infinite; }
+.loader-mark-fallback { display: block; width: 100%; height: 100%; fill: var(--accent); stroke: var(--accent); stroke-width: 1; opacity: .94; }
+.loader-mark-fallback circle { fill: #101114; stroke: var(--accent); stroke-width: 2.4; }
+.loader-mark-fallback path { stroke: #ffad66; stroke-width: .65; }
+.loader-mark img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; filter: brightness(.75); }
 .loader-kicker { margin: 0 0 18px; color: #a1a1aa; font-size: .62rem; letter-spacing: .22em; }
 .loader-content h1 { margin: 0; font: 500 clamp(2.8rem, 7vw, 5.4rem)/.92 'Space Grotesk'; letter-spacing: -.075em; }
 .loader-content h1 em { color: var(--accent); font-style: normal; }
