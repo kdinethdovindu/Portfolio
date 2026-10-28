@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useForm } from '@formspree/react';
 import { motion, useInView, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionValue } from 'motion/react';
 import {
@@ -193,9 +194,9 @@ function TechStack() {
   </Reveal></section>;
 }
 
-function ProjectCard({ project }: { project: Project }) {
-  const LinkButton = ({ href, label, icon }: { href: string | null; label: string; icon: ReactNode }) => href ? <a className="card-action" href={href} target="_blank" rel="noreferrer">{icon}{label}</a> : <span className="card-action disabled" aria-disabled="true">{icon}{label}</span>;
-  return <article className="project-card"><div className="project-image"><img src={project.image} alt={`${project.shortTitle} project placeholder`} /><span className="project-index">PROJECT / {String(projects.indexOf(project) + 1).padStart(2, '0')}</span></div><div className="project-body"><div><span className="project-kicker">{project.role ?? project.tech.slice(0, 3).join(' · ')}</span><h3>{project.title}</h3><p>{project.description}</p></div><div className="project-actions"><LinkButton href={project.github} label="GitHub" icon={<Github size={15} />} /><LinkButton href={project.demo} label="Live Demo" icon={<ExternalLink size={15} />} /></div></div></article>;
+function ProjectCard({ project, onImageClick }: { project: Project; onImageClick: (project: Project) => void }) {
+  const LinkButton = ({ href, label, icon }: { href: string | null; label: string; icon: ReactNode }) => href ? <a className="card-action" href={href} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>{icon}{label}</a> : <span className="card-action disabled" aria-disabled="true" onClick={(event) => event.stopPropagation()}>{icon}{label}</span>;
+  return <article className="project-card" onClick={() => onImageClick(project)}><div className="project-image" role="button" tabIndex={0} aria-label={`Open ${project.shortTitle} image preview`} onClick={(event) => { event.stopPropagation(); onImageClick(project); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onImageClick(project); } }}><img src={project.image} alt={`${project.shortTitle} project preview`} draggable={false} /></div><div className="project-body"><div><span className="project-kicker">{project.role ?? project.tech.slice(0, 3).join(' · ')}</span><h3>{project.title}</h3><p>{project.description}</p></div><div className="project-actions"><LinkButton href={project.github} label="GitHub" icon={<Github size={15} />} /><LinkButton href={project.demo} label="Live Demo" icon={<ExternalLink size={15} />} /></div></div></article>;
 }
 
 function Projects({ projectProgress }: { projectProgress: MotionValue<number> }) {
@@ -204,57 +205,24 @@ function Projects({ projectProgress }: { projectProgress: MotionValue<number> })
   const trackRef = useRef<HTMLDivElement>(null);
   const [travel, setTravel] = useState(0);
   const [scrollDistance, setScrollDistance] = useState(0);
-  const [dragging, setDragging] = useState(false);
-  const manualOffset = useMotionValue(0);
-  const dragStartRef = useRef<{ pointerX: number; pointerY: number; position: number } | null>(null);
-  const dragAxisRef = useRef<'pending' | 'horizontal' | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const scrollX = useTransform(scrollYProgress, [0, 1], [0, -travel]);
   const smoothScrollX = useSpring(scrollX, { stiffness: 78, damping: 28, mass: .55 });
   const clampPosition = (position: number) => Math.max(-travel, Math.min(0, position));
-  const rawTrackX = useTransform([smoothScrollX, manualOffset], ([scrollPosition, manualPosition]) => Number(scrollPosition) + Number(manualPosition));
-  const trackX = useTransform(rawTrackX, (position) => clampPosition(Number(position)));
+  const trackX = useTransform(smoothScrollX, (position) => clampPosition(Number(position)));
   const galleryProgress = useTransform(trackX, (position) => travel > 0 ? Math.max(0, Math.min(1, -Number(position) / travel)) : 0);
   useEffect(() => galleryProgress.on('change', (value) => projectProgress.set(Number(value))), [galleryProgress, projectProgress]);
-  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); setTravel(nextTravel); setScrollDistance(nextTravel); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
-  const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    if (event.target instanceof Element && event.target.closest('a,button')) return;
-    const position = clampPosition(smoothScrollX.get() + manualOffset.get());
-    dragStartRef.current = { pointerX: event.clientX, pointerY: event.clientY, position };
-    dragAxisRef.current = event.pointerType === 'mouse' ? 'horizontal' : 'pending';
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setDragging(event.pointerType === 'mouse');
-  };
-  const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const start = dragStartRef.current;
-    if (!start) return;
-    const dx = event.clientX - start.pointerX;
-    const dy = event.clientY - start.pointerY;
-    if (dragAxisRef.current === 'pending') {
-      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
-      if (Math.abs(dy) > Math.abs(dx)) {
-        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-        dragStartRef.current = null;
-        dragAxisRef.current = null;
-        setDragging(false);
-        return;
-      }
-      dragAxisRef.current = 'horizontal';
-      setDragging(true);
-    }
-    if (dragAxisRef.current !== 'horizontal') return;
-    event.preventDefault();
-    const position = clampPosition(start.position + dx);
-    manualOffset.set(position - smoothScrollX.get());
-  };
-  const handleGalleryPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-    dragStartRef.current = null;
-    dragAxisRef.current = null;
-    setDragging(false);
-  };
-  return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /></div><div className={`gallery-viewport ${dragging ? 'is-dragging' : ''}`} ref={viewportRef} onPointerDown={handleGalleryPointerDown} onPointerMove={handleGalleryPointerMove} onPointerUp={handleGalleryPointerUp} onPointerCancel={handleGalleryPointerUp}><motion.div className="project-track" ref={trackRef} style={{ x: trackX } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: galleryProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
+  useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); setTravel(nextTravel); setScrollDistance(nextTravel); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, []);
+  useEffect(() => {
+    if (!selectedProject) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelectedProject(null); };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', closeOnEscape); };
+  }, [selectedProject]);
+  return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /></div><div className="gallery-viewport" ref={viewportRef}><motion.div className="project-track" ref={trackRef} style={{ x: trackX } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} onImageClick={setSelectedProject} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: galleryProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div>{selectedProject && createPortal(<div className="project-lightbox" role="dialog" aria-modal="true" aria-label={`${selectedProject.shortTitle} image preview`} onClick={(event) => { if (event.target === event.currentTarget) setSelectedProject(null); }}><div className="project-lightbox-panel"><button className="project-lightbox-close" type="button" aria-label="Close project image" onClick={() => setSelectedProject(null)}><X size={20} /></button><img src={selectedProject.image} alt={`${selectedProject.shortTitle} project preview`} /></div></div>, document.body)}</section>;
 }
 
 function Timeline({ items, kind }: { items: typeof education | typeof certifications; kind: 'education' | 'certifications' }) {
