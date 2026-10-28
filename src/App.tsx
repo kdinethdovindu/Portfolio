@@ -206,7 +206,8 @@ function Projects({ projectProgress }: { projectProgress: MotionValue<number> })
   const [scrollDistance, setScrollDistance] = useState(0);
   const [dragging, setDragging] = useState(false);
   const manualOffset = useMotionValue(0);
-  const dragStartRef = useRef<{ pointerX: number; position: number } | null>(null);
+  const dragStartRef = useRef<{ pointerX: number; pointerY: number; position: number } | null>(null);
+  const dragAxisRef = useRef<'pending' | 'horizontal' | null>(null);
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end end'] });
   const scrollX = useTransform(scrollYProgress, [0, 1], [0, -travel]);
   const smoothScrollX = useSpring(scrollX, { stiffness: 78, damping: 28, mass: .55 });
@@ -216,9 +217,43 @@ function Projects({ projectProgress }: { projectProgress: MotionValue<number> })
   const galleryProgress = useTransform(trackX, (position) => travel > 0 ? Math.max(0, Math.min(1, -Number(position) / travel)) : 0);
   useEffect(() => galleryProgress.on('change', (value) => projectProgress.set(Number(value))), [galleryProgress, projectProgress]);
   useEffect(() => { const measure = () => { if (viewportRef.current && trackRef.current) { const nextTravel = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 24); setTravel(nextTravel); setScrollDistance(nextTravel); manualOffset.set(Math.max(-nextTravel, Math.min(0, manualOffset.get()))); } }; measure(); const observer = new ResizeObserver(measure); if (viewportRef.current) observer.observe(viewportRef.current); if (trackRef.current) observer.observe(trackRef.current); window.addEventListener('resize', measure); return () => { observer.disconnect(); window.removeEventListener('resize', measure); }; }, [manualOffset]);
-  const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.pointerType === 'mouse' && event.button !== 0) return; if (event.target instanceof Element && event.target.closest('a,button')) return; const position = clampPosition(smoothScrollX.get() + manualOffset.get()); dragStartRef.current = { pointerX: event.clientX, position }; event.currentTarget.setPointerCapture(event.pointerId); setDragging(true); };
-  const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => { const start = dragStartRef.current; if (!start) return; const position = clampPosition(start.position + event.clientX - start.pointerX); manualOffset.set(position - smoothScrollX.get()); };
-  const handleGalleryPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => { if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId); dragStartRef.current = null; setDragging(false); };
+  const handleGalleryPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    if (event.target instanceof Element && event.target.closest('a,button')) return;
+    const position = clampPosition(smoothScrollX.get() + manualOffset.get());
+    dragStartRef.current = { pointerX: event.clientX, pointerY: event.clientY, position };
+    dragAxisRef.current = event.pointerType === 'mouse' ? 'horizontal' : 'pending';
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setDragging(event.pointerType === 'mouse');
+  };
+  const handleGalleryPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = dragStartRef.current;
+    if (!start) return;
+    const dx = event.clientX - start.pointerX;
+    const dy = event.clientY - start.pointerY;
+    if (dragAxisRef.current === 'pending') {
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      if (Math.abs(dy) > Math.abs(dx)) {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+        dragStartRef.current = null;
+        dragAxisRef.current = null;
+        setDragging(false);
+        return;
+      }
+      dragAxisRef.current = 'horizontal';
+      setDragging(true);
+    }
+    if (dragAxisRef.current !== 'horizontal') return;
+    event.preventDefault();
+    const position = clampPosition(start.position + dx);
+    manualOffset.set(position - smoothScrollX.get());
+  };
+  const handleGalleryPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    dragStartRef.current = null;
+    dragAxisRef.current = null;
+    setDragging(false);
+  };
   return <section id="projects" ref={sectionRef} className="projects-section section-shell" style={scrollDistance > 0 ? { height: `calc(100vh + ${scrollDistance}px)` } : undefined}><div className="projects-sticky"><div className="projects-head"><SectionHeading eyebrow="03 / SELECTED WORK" title="Featured Projects" subtitle="A selection of applications I've designed and developed." /></div><div className={`gallery-viewport ${dragging ? 'is-dragging' : ''}`} ref={viewportRef} onPointerDown={handleGalleryPointerDown} onPointerMove={handleGalleryPointerMove} onPointerUp={handleGalleryPointerUp} onPointerCancel={handleGalleryPointerUp}><motion.div className="project-track" ref={trackRef} style={{ x: trackX } as unknown as CSSProperties}>{projects.map((project) => <ProjectCard key={project.shortTitle} project={project} />)}</motion.div></div><div className="gallery-progress"><span>SCROLL TO EXPLORE</span><div><motion.i style={{ scaleX: galleryProgress }} /></div><span>{String(projects.length).padStart(2, '0')} PROJECTS</span></div></div></section>;
 }
 
