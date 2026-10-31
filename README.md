@@ -89,6 +89,18 @@ The contact form uses [Formspree](https://formspree.io/).
 
 If the variable is not set, the form shows a setup message and visitors can still contact you through the email fallback.
 
+## Vercel Web Analytics
+
+Visitor and page-view tracking is wired through `@vercel/analytics` in [src/main.tsx](./src/main.tsx).
+
+After deploying:
+
+1. Open the project in Vercel and select **Analytics**.
+2. Enable Web Analytics if Vercel prompts you.
+3. Visit the production site once to send the first page-view event.
+
+Vercel then reports visitors, page views, bounce rate, pages, referrers, and device details in the project dashboard.
+
 ## Project structure
 
 ```text
