@@ -7,8 +7,8 @@ Personal portfolio website for **Dineth Dovindu**, a full-stack developer from S
 ## Screenshots
 
 <p align="center">
-  <img src="./screenshots/desktop-home.png" alt="Desktop portfolio preview" width="49%" />
   <img src="./screenshots/desktop-tech-stack.png" alt="Desktop technology preview" width="49%" />
+  <img src="./screenshots/desktop-home.png" alt="Desktop portfolio preview" width="49%" />
 </p>
 
 ## Features
