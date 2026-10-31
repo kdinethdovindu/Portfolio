@@ -2,6 +2,8 @@
 
 Personal portfolio website for **Dineth Dovindu**, a full-stack developer from Sri Lanka. The site presents selected projects, technical skills, education, certifications, and contact details in a responsive dark interface.
 
+**Live site:** [kdinethdovindu.is-a.dev](https://kdinethdovindu.is-a.dev/)
+
 ## Screenshots
 
 <p align="center">
@@ -138,4 +140,5 @@ This repository contains personal portfolio content and artwork. Contact the aut
 - Email: [kdinethdovindu@gmail.com](mailto:kdinethdovindu@gmail.com)
 - GitHub: [kdinethdovindu](https://github.com/kdinethdovindu)
 - LinkedIn: [Dineth Dovindu](https://www.linkedin.com/in/dineth-dovindu-ba801a383/)
+- Portfolio: [kdinethdovindu.is-a.dev](https://kdinethdovindu.is-a.dev/)
 - Location: Sri Lanka
